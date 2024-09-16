@@ -6,11 +6,12 @@ from jose import JWTError, jwt
 from .database import get_db
 from .models import Employee
 from .schemas import TokenData
+from .settings import project_settings
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/token")
 
-SECRET_KEY = "48f5e94e9773b64079cd71778b38bba6fb0d2f521ba8bf2632da3a070afb6160"
 ALGORITHM = "HS256"
+
 
 def get_current_user(
     token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)
@@ -22,7 +23,7 @@ def get_current_user(
     )
 
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        payload = jwt.decode(token, project_settings.SECRET_KEY, algorithms=[ALGORITHM])
         user_id: str = payload.get("sub")
         if user_id is None:
             raise credentials_exception

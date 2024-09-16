@@ -5,7 +5,7 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 
 
-class DatabaseSettings(Settings):
+class ProjectSettings(Settings):
     SERVER_ADDRESS: str
     POSTGRES_CONN: str
     POSTGRES_USERNAME: str
@@ -13,5 +13,7 @@ class DatabaseSettings(Settings):
     POSTGRES_HOST: str
     POSTGRES_PORT: str
     POSTGRES_DATABASE: str
+    SECRET_KEY: str
 
-database_settings = DatabaseSettings()
+
+project_settings = ProjectSettings()

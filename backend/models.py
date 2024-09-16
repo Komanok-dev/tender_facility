@@ -1,6 +1,16 @@
 import uuid
 import enum
-from sqlalchemy import Column, String, Integer, Text, Enum, ForeignKey, TIMESTAMP, func, Float
+from sqlalchemy import (
+    Column,
+    String,
+    Integer,
+    Text,
+    Enum,
+    ForeignKey,
+    TIMESTAMP,
+    func,
+    Float,
+)
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import declarative_base
 from sqlalchemy.orm import relationship
@@ -41,8 +51,8 @@ class Employee(Base):
     tenders = relationship("Tender", back_populates="responsible_user")
     bids = relationship("Bid", back_populates="author")
     bid_reviews = relationship("BidReview", back_populates="reviewer")
-    organization_id = Column(UUID(as_uuid=True), ForeignKey('organization.id'))
-    
+    organization_id = Column(UUID(as_uuid=True), ForeignKey("organization.id"))
+
 
 class Organization(Base):
     __tablename__ = "organization"

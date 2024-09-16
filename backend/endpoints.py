@@ -27,6 +27,7 @@ from .schemas import Token
 
 router = APIRouter(prefix="/api", tags=["API"])
 
+
 @router.post("/register_user")
 def register_user(username: str, password: str, db: Session = Depends(get_db)):
     new_user = Employee(username=username, hashed_password=get_password_hash(password))
@@ -34,6 +35,7 @@ def register_user(username: str, password: str, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(new_user)
     return new_user.id
+
 
 @router.post("/token")
 def login_for_access_token(
@@ -53,9 +55,11 @@ def login_for_access_token(
     )
     return Token(access_token=access_token, token_type="bearer")
 
+
 @router.get("/ping")
 def ping():
     return "OK"
+
 
 @router.get(
     "/tenders",
@@ -71,6 +75,7 @@ def getTenders(
         query = query.filter(Tender.serviceType == service_type)
     tenders = query.all()
     return tenders
+
 
 @router.post(
     "/tenders/new",
@@ -112,6 +117,7 @@ def createTender(
     )
     return response
 
+
 @router.patch(
     "/tenders/{tender_id}/publish",
     response_model=TenderResponse,
@@ -139,6 +145,7 @@ def publish_tender(
         data={"id": tender.id, "created_at": tender.status},
     )
     return response
+
 
 @router.get(
     "/tenders/my",
@@ -179,6 +186,7 @@ def getUserTenders(
         },
     )
 
+
 @router.post(
     "/tenders/{tender_id}/close",
     response_model=TenderResponse,
@@ -206,6 +214,7 @@ def close_tender(
         data={"id": tender.id, "created_at": tender.status},
     )
     return response
+
 
 @router.patch(
     "/tenders/{tender_id}/edit",
@@ -255,6 +264,7 @@ def editTender(
         data={"id": tender.id, "name": tender.title, "description": tender.description},
     )
 
+
 @router.put(
     "/tenders/{tender_id}/rollback/{version}",
     response_model=TenderResponse,
@@ -300,6 +310,7 @@ def rollback_tender(
         data={"id": tender.id, "version": tender.version},
     )
 
+
 @router.post(
     "/bids/new",
     response_model=BidResponse,
@@ -309,7 +320,7 @@ def rollback_tender(
 def create_bid(
     bid: BidCreate,
     current_user: Employee = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     tender = db.query(Tender).filter_by(id=bid.tender_id).first()
     if not tender:
@@ -334,13 +345,14 @@ def create_bid(
         description=bid.description,
         author_id=current_user.id,
         status="CREATED",
-        version=1
+        version=1,
     )
     db.add(new_bid)
     db.commit()
     db.refresh(new_bid)
 
     return new_bid
+
 
 @router.post("/bids/{bid_id}/publish", response_model=BidResponse)
 def publish_bid(
@@ -363,6 +375,7 @@ def publish_bid(
     db.refresh(bid)
     return bid
 
+
 @router.post("/bids/{bid_id}/cancel", response_model=BidResponse)
 def cancel_bid(
     bid_id: str,
@@ -383,6 +396,7 @@ def cancel_bid(
     db.commit()
     db.refresh(bid)
     return bid
+
 
 @router.patch("/bids/{bid_id}/edit", response_model=BidResponse)
 def edit_bid(
@@ -409,6 +423,7 @@ def edit_bid(
     db.refresh(bid)
     return bid
 
+
 @router.post("/bids/{bid_id}/approve", response_model=BidResponse)
 def approve_bid(
     bid_id: str,
@@ -420,19 +435,33 @@ def approve_bid(
         raise HTTPException(status_code=404, detail="Bid not found")
 
     if current_user.organization_id != bid.tender.organization_id:
-        raise HTTPException(status_code=403, detail="You are not responsible for this tender's organization")
+        raise HTTPException(
+            status_code=403,
+            detail="You are not responsible for this tender's organization",
+        )
 
     reviews = db.query(BidReview).filter_by(bid_id=bid_id).all()
     if any(review.status == BidStatus.REJECTED for review in reviews):
         bid.status = BidStatus.REJECTED
     else:
-        quorum = min(3, len(db.query(OrganizationResponsible).filter_by(organization_id=bid.tender.organization_id).all()))
-        if len([review for review in reviews if review.status == BidStatus.APPROVED]) >= quorum:
+        quorum = min(
+            3,
+            len(
+                db.query(OrganizationResponsible)
+                .filter_by(organization_id=bid.tender.organization_id)
+                .all()
+            ),
+        )
+        if (
+            len([review for review in reviews if review.status == BidStatus.APPROVED])
+            >= quorum
+        ):
             bid.status = BidStatus.APPROVED
             bid.tender.status = TenderStatus.CLOSED
     db.commit()
     db.refresh(bid)
     return bid
+
 
 @router.post("/bids/{bid_id}/review", response_model=BidReviewResponse)
 def add_review(
@@ -469,6 +498,7 @@ def add_review(
 
     return new_review
 
+
 @router.get("/bids/{bid_id}/reviews", response_model=List[BidReviewResponse])
 def get_reviews(
     bid_id: str,
@@ -485,6 +515,7 @@ def get_reviews(
         )
     reviews = db.query(BidReview).filter_by(bid_id=bid_id).all()
     return reviews
+
 
 @router.put("/bids/{bid_id}/rollback/{version}", response_model=BidResponse)
 def rollback_bid(
@@ -503,12 +534,16 @@ def rollback_bid(
     if version <= 0:
         raise HTTPException(status_code=400, detail="Version must be greater than 0")
     if version >= bid.version:
-        raise HTTPException(status_code=400, detail="Cannot rollback to a version greater or equal to the current version")
+        raise HTTPException(
+            status_code=400,
+            detail="Cannot rollback to a version greater or equal to the current version",
+        )
 
     bid.version = version
     db.commit()
     db.refresh(bid)
     return bid
+
 
 @router.get("/bids/{tender_id}/reviews", response_model=List[BidReviewResponse])
 def get_reviews_for_tender(
@@ -527,15 +562,20 @@ def get_reviews_for_tender(
     if not author:
         raise HTTPException(status_code=404, detail="Автор не найден.")
 
-    bids = db.query(Bid).filter(
-        Bid.author_id == author.id,
-        Bid.tender_id == tender_id
-    ).all()
+    bids = (
+        db.query(Bid)
+        .filter(Bid.author_id == author.id, Bid.tender_id == tender_id)
+        .all()
+    )
 
     if not bids:
         raise HTTPException(status_code=404, detail="Предложения автора не найдены.")
 
-    reviews = db.query(BidReview).filter(BidReview.bid_id.in_([str(bid.id) for bid in bids])).all()
+    reviews = (
+        db.query(BidReview)
+        .filter(BidReview.bid_id.in_([str(bid.id) for bid in bids]))
+        .all()
+    )
 
     if not reviews:
         raise HTTPException(status_code=404, detail="Отзывы не найдены.")

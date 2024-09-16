@@ -28,3 +28,9 @@ HELP.md
 
 ### VS Code ###
 .vscode/
+
+__pycache__
+backend/__pycache__
+tests/__pycache__
+.venv
+.pytest_cache

@@ -9,7 +9,7 @@ client = TestClient(app)
 
 
 def test_ping():
-    response =  client.get(f"{BASE_URL}/ping")
+    response = client.get(f"{BASE_URL}/ping")
     print(type(response.text))
     assert response.status_code == 200
     assert response.text == '"OK"'
