@@ -1,0 +1,40 @@
+version: '3.9'
+services:
+  backend:
+    build: .
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+    volumes:
+      - .:/backend
+    env_file:
+      - .env
+    command: /bin/bash -c "uvicorn backend.main:app --host 0.0.0.0 --port 8080 --reload"
+
+  db:
+    image: postgres:16.2
+    container_name: database
+    ports:
+      - "${POSTGRES_PORT}:${POSTGRES_PORT}"
+    environment:
+      POSTGRES_DB: ${POSTGRES_DATABASE}
+      POSTGRES_USER: ${POSTGRES_USERNAME}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    env_file:
+      - .env
+    volumes:
+      - db_data:/var/lib/postgresql/data
+
+  tests:
+    build: .
+    depends_on:
+      - db
+    volumes:
+      - .:/backend
+    env_file:
+      - .env
+    command: /bin/bash -c "pytest"
+
+volumes:
+  db_data:
