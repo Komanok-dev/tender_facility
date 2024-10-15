@@ -2,7 +2,7 @@
 name = "zadanie-6105"
 version = "0.1.0"
 description = ""
-authors = ["Komanok-dev <s.komanok@gmail.com>"]
+authors = [""]
 readme = "README.md"
 
 [tool.poetry.dependencies]
